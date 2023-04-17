@@ -41,7 +41,10 @@ class App extends Component {
               onClick={function (e) {
                 console.log(e);
                 e.preventDefault()
-              }}
+                this.setStats({
+                  mode: 'welcome'
+                })
+              }.bind(this)}
             >
               {this.state.subject.title}
             </a>

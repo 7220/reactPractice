@@ -5,6 +5,7 @@ import TOC from "./component/TOC";
 import Control from "./component/Control";
 import "./App.css";
 import CreateContent from "./component/CreateContent";
+import UpdateContent from "./component/UpdateContent";
 
 class App extends Component {
   constructor(props) {
@@ -22,7 +23,18 @@ class App extends Component {
       ],
     };
   }
-  render() {
+  getReadContent() {
+    var i = 0;
+    while (i < this.state.contents.length) {
+      var data = this.state.contents[i];
+      if (data.id === this.state.selected_content_id) {
+        return data;
+      }
+      i++;
+    }
+  }
+
+  getContext() {
     var _title,
       _desc,
       _article = null;
@@ -31,27 +43,56 @@ class App extends Component {
       _desc = this.state.welcome.desc;
       _article = <ReadContent title={_title} desc={_desc}></ReadContent>;
     } else if (this.state.mode === "read") {
-      var i = 0;
-      while (i < this.state.contents.length) {
-        var data = this.state.contents[i];
-        if (data.id === this.state.selected_content_id) {
-          _title = data.title;
-          _desc = data.desc;
-        }
-        i++;
-      }
-      _article = <ReadContent title={_title} desc={_desc}></ReadContent>;
+      var _content = this.getReadContent();
+      _article = (
+        <ReadContent title={_content.title} desc={_content.desc}></ReadContent>
+      );
     } else if (this.state.mode === "create") {
-      _article = <CreateContent onSubmit={function(_title, _desc) {
-        this.max_contents_id = this.max_contents_id + 1
-        var _contents = this.state.contents.concat(
-          {id: this.max_contents_id, title: _title, desc: _desc}
-        )
-        this.setState({
-          contents: _contents
-        })
-      }.bind(this)}></CreateContent>;
+      _article = (
+        <CreateContent
+          onSubmit={function (_title, _desc) {
+            this.max_contents_id = this.max_contents_id + 1;
+            var _contents = Array.from(this.state.contents);
+            _contents.push({
+              id: this.max_contents_id,
+              title: _title,
+              desc: _desc,
+            });
+            this.setState({
+              contents: _contents,
+              mode: "read",
+              selected_content_id: this.max_contents_id,
+            });
+          }.bind(this)}
+        ></CreateContent>
+      );
+    } else if (this.state.mode === "update") {
+      _content = this.getReadContent();
+      _article = (
+        <UpdateContent
+          data={_content}
+          onSubmit={function (_id, _title, _desc) {
+            var _contents = Array.from(this.state.contents);
+            var i = 0;
+            while (i < _contents.length) {
+              if (_contents[i].id === _id) {
+                _contents[i] = { id: _id, title: _title, desc: _desc };
+                break;
+              }
+              i++;
+            }
+            this.setState({
+              contents: _contents,
+              mode: "read",
+            });
+          }.bind(this)}
+        ></UpdateContent>
+      );
     }
+    return _article;
+  }
+
+  render() {
     return (
       <div className="App">
         <Subject
@@ -77,7 +118,7 @@ class App extends Component {
             });
           }.bind(this)}
         ></Control>
-        {_article}
+        {this.getContext()}
       </div>
     );
   }
